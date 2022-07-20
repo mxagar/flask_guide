@@ -26,3 +26,9 @@ For a detailed guide on how to use Flask and the content of the examples: `../fl
 
 ## Example Files
 
+Each section in the guide has its own sub-folder with examples.
+
+- `01_basics/`
+	- [`hello_world`](./01_basics/hello_world.py)
+	- [`dynamic_routes.py`](./01_basics/dynamic_routes.py)
+- `02_templates`

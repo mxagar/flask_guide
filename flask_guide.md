@@ -12,6 +12,10 @@ No guarantees.
 ### Table of Contents
 
 1. [Flask Basics](#Flask-Basics)
+    - Hello World Example
+    - Basic Routes
+    - Dynamic Routes
+    - Debug Mode
 2. [Templates](#Templates)
 3. [Forms](#Forms)
 4. SQL Databases
@@ -19,6 +23,8 @@ No guarantees.
 6. User Authentication
 7. REST APIs
 8. Deployment
+
+There is an `examples/` folder with the examples described in the current guide.
 
 # 1. Flask Basics
 
@@ -34,7 +40,7 @@ conda install -c anaconda flask-wtf  -y
 
 ## Hello World Example
 
-`./examples/hello_world.py`:
+`./examples/01_basics/hello_world.py`:
 
 ```python
 from flask import Flask
@@ -90,7 +96,7 @@ With dynamic routes we pass variables to the page functions. The effect is that 
 
 One possible application are custom user pages:
 
-`./examples/dynamic_route.py`
+`./examples/01_basics/dynamic_route.py`
 
 ```python
 from flask import Flask
@@ -149,6 +155,188 @@ NOTE: debug mode should be deactivated when we deploy to production!
 
 
 # 2. Templates
+
+Instead of returning HTML strings, we usually render a template HTML file. These are **templates** and they are rendered with the function `render_template(html_filepath)`.
+
+Templates need to be located in a folder called `templates/` and they can use resources from other locations, e.g., image files.
+
+## Basic Template
+
+All the HTML template files need to be in `templates/`. The resources they use can be anywhere, e.g., in this case, they are in the folder `static/`.
+
+Basic example in `./examples/02_templates`.
+
+`templates/basic-template.html`:
+
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Basic</title>
+  </head>
+  <body>
+    <h1>Hello!</h1>
+    <h2>Here is a cute picture of a puppy!</h2>
+    <!-- The image can be located anywhere, but the HTML file in templates/-->
+    <img src="../static/puppy_pic.jpg" width="600" height="400">
+
+  </body>
+</html>
+
+```
+
+`basic_template.py`:
+
+```python
+# Run: python basic_template.py
+
+# Import the render_template function
+from flask import Flask, render_template
+app = Flask(__name__)
+
+# Render an HTML template file
+# All templates are located in the folder templates (Flask looks for that name)
+# This template uses an image in the folder static
+# The folder name with the resources is arbitrary
+@app.route('/')
+def index():
+    # Connecting to a template (html file)
+    return render_template('basic-template.html')
+
+# Debug mode active; deactivate to go to production
+if __name__ == '__main__':
+    app.run(debug=True)
+
+```
+
+## Template Variables with Jinja
+
+We can use [Jinja templating](https://jinja.palletsprojects.com/en/3.1.x/), as in Jekyll, to inject variables from the python script in the HTML document visualized with `render_template()`; simply, the variables are created inside the page function and passed directly to `render_template()`. Then, we access them with Jinja notation in the HTML document. We can pass strings, lists, dictionaries, etc.
+
+Basic example in `./examples/02_templates`.
+
+`variables.py`
+
+```python
+# Run: python variables.py
+
+from flask import Flask, render_template
+app = Flask(__name__)
+
+@app.route('/')
+def index():
+    # Pass in a puppy name
+    # We insert it to the html with jinja2 templates!
+    return '<h1> Go to /puppy/name </h1>'
+
+@app.route('/puppy/<name>')
+def adv_puppy_name(name):
+    # Pass in a puppy name
+    # We insert it to the html with Jinja templates!
+    message = "Trying variables."
+    letters = list(name)
+    pup_dict = {'pup_name':name}
+    return render_template('variables-template.html',
+                           message=message,
+                           name=name,
+                           mylist=letters,
+                           mydict=pup_dict)
+
+if __name__ == '__main__':
+    app.run(debug=True)
+```
+
+`templates/variables-template.html`:
+
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Basic</title>
+  </head>
+  <body>
+    <!-- The message is defined in render_template() and passed to the HTML -->
+    <h1>{{message}}</h1>
+    <!-- name is passed via the browser to the python script and from there to he HTML via render_template() -->
+    <h1>Basic variable insert: {{name}}!</h1>
+    <!-- Recall that we set mylist=letters in the .py file. -->
+    <!-- You could use whatever variable names you want -->
+    <h1>List example: {{mylist}}</h1>
+    <!-- We can index the list as well -->
+    <h1>Indexing the list for the first letter: {{mylist[0]}}</h1>
+    <!-- We can also use dictionaries -->
+    <h1>Puppy name from dictionary: {{mydict['pup_name']}}</h1>
+  </body>
+</html>
+```
+
+## Template Control Flow with Jinja
+
+While with Jinja variables we use `{{ variable }}` within the HTML text, we need to use `{% ... %}` for control flow statements, i.e., `if, for`, etc. Inside them, we can access the variables.
+
+Examples:
+
+```html
+<ul>
+    {% for item in mylist %}
+    <li>{{ item }}</li>
+    {% endfor %}
+</ul>
+
+{% if username == "Mikel" %}
+    <h1>Insert credit card number.</h1>
+{% elif username == "Unai" %}
+    <h1>Ask your parents.</h1>
+{% else %}
+    <h1>You're not authenticated.</h1>
+{% endif %}
+```
+
+Example in the `examples/` folder:
+
+`control_flow.py`:
+
+```python
+from flask import Flask, render_template
+app = Flask(__name__)
+
+@app.route('/')
+def index():
+    puppies = ['Fluffy','Rufus','Spike']
+    return render_template('control-flow-template.html',
+                           puppies=puppies)
+
+if __name__ == '__main__':
+    app.run(debug=True)
+```
+
+`templates/control-flow-template.html`:
+
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+  </head>
+  <body>
+    <p>Here we use a for loop for a list</p>
+    <ul>
+      {% for pup in puppies %}
+      <li>{{pup}}</li>
+      {% endfor %}
+    </ul>
+    <p>We can also add if/else statements:</p>
+    {% if 'Rufus' in puppies %}
+      <p>Found you in the list of puppies Rufus!</p>
+    {% else %}
+      <p>Hmm, Rufus isn't in this list.</p>
+    {% endif %}
+  </body>
+</html>
+```
 
 
 # 3. Forms

@@ -1,1 +1,6 @@
 .DS_Store
+__pycache__
+.vscode
+jekyll_web_guide
+udemy_flask
+python_manual.txt

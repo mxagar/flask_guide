@@ -1,0 +1,17 @@
+<p>
+{% if breed %}
+  The breed you entered is {{breed}}.
+  You can update it in the form below:
+{% else %}
+  Please enter your breed in the form below:
+{% endif %}
+</p>
+
+<form method="POST">
+    {# This hidden_tag is a CSRF security feature (CSRF = Cross-site request forgery). #}
+    {# The HTML <form> doesn't need a class or an action, because we use directly WTForms. #}
+    {# If we want some styling, we append (class='some CSS class') to an element. #}
+    {{ form.hidden_tag() }}
+    {{ form.breed.label }} {{ form.breed(class='some-css-class') }}
+    {{ form.submit() }}
+</form>

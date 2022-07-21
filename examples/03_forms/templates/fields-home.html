@@ -1,0 +1,22 @@
+<h1>Welcome to Puppy Surveys</h1>
+<form  method="POST">
+    {# This hidden_tag is a CSRF security feature. #}
+    {# The HTML <form> doesn't need a class or an action, because we use directly WTForms. #}
+    {# If we want some styling, we append (class='some CSS class') to an element: #}
+    {# form.food_choice(class='some CSS class') #}
+
+    {{ form.hidden_tag() }}
+    {{ form.breed.label }} {{ form.breed }}
+    <br>
+    {{ form.neutered.label }} {{ form.neutered }}
+    <br>
+    {{ form.food_choice.label }}{{ form.food_choice }}
+    <br>
+    {{ form.mood.label }}{{ form.mood }}
+    <br>
+    Any other feedback?
+    <br>
+    {{ form.feedback }}
+   <br>
+    {{ form.submit() }}
+</form>

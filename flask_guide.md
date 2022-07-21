@@ -57,7 +57,7 @@ app = Flask(__name__) # __name__ is __main__
 
 # We pass to the instantiated Flask app
 # the pages we want in the rout we like
-# Here: an index page function located in the root
+# Here: an index page or view function located in the root
 @app.route('/')
 def index():
 	# In this case, we directly return HTML code
@@ -101,7 +101,7 @@ def info():
 
 ## Dynamic Routes
 
-With dynamic routes we pass variables to the page functions. The effect is that we can type the matching URL address we want, i.e., we pass the variable name through the browser. Then, that variable is caught by the page function and it can process it as desired.
+With dynamic routes we pass variables to the page or view functions. The effect is that we can type the matching URL address we want, i.e., we pass the variable name through the browser. Then, that variable is caught by the page or view function and it can process it as desired.
 
 One possible application are custom user pages:
 
@@ -124,7 +124,7 @@ def info():
 # Dynamic routing: we pass a variable that changes the URL name
 # The idea is that the page is created when we enter the address,
 # i.e., we pass the variable via the web browser!
-# Then, that variable can be processed in the page function.
+# Then, that variable can be processed in the page or view function.
 # http://127.0.0.1:5000/user/mikel -> URL accepted and content modified
 # http://127.0.0.1:5000/user/unai -> URL accepted and content modified
 # We can apply changes to name: name.upper(), etc.
@@ -156,7 +156,7 @@ if __name__ == '__main__':
     app.run(debug=True)
 ```
 
-That way, if we have an error in any of the page functions, instead of displaying an "Internal Server Error" page, we get a traceback list of all the steps until the first error.
+That way, if we have an error in any of the page or view functions, instead of displaying an "Internal Server Error" page, we get a traceback list of all the steps until the first error.
 
 We can also open an interactive python debugging console clicking on the traceback step icon for that; but **we need a PIN**. The PIN is displayed on the terminal/shell when we run the python script.
 
@@ -221,7 +221,7 @@ if __name__ == '__main__':
 
 ## Template Variables with Jinja
 
-We can use [Jinja templating](https://jinja.palletsprojects.com/en/3.1.x/), as in Jekyll, to inject variables from the python script in the HTML document visualized with `render_template()`; simply, the variables are created inside the page function and passed directly to `render_template()`. Then, we access them with Jinja notation in the HTML document. We can pass strings, lists, dictionaries, etc.
+We can use [Jinja templating](https://jinja.palletsprojects.com/en/3.1.x/), as in Jekyll, to inject variables from the python script in the HTML document visualized with `render_template()`; simply, the variables are created inside the page/view function and passed directly to `render_template()`. Then, we access them with Jinja notation in the HTML document. We can pass strings, lists, dictionaries, etc.
 
 Jinja command lines are of 3 types:
 
@@ -388,7 +388,7 @@ Important links on filter:
 
 ### `url_for()`
 
-Instead of using hard-coded HTML filepaths we can use `url_for()` in a Jinja command: we enter the page function name and the associated HTML file path is returned.
+Instead of using hard-coded HTML filepaths we can use `url_for()` in a Jinja command: we enter the page or view function name and the associated HTML file path is returned.
 
 For instance, if we have this python app:
 
@@ -401,7 +401,7 @@ def about_page_function():
     return render_template('/path/to/about.html')
 ```
 
-Then, in any HTML file we have access to the complete `about.html` file path via its **page function name**:
+Then, in any HTML file we have access to the complete `about.html` file path via its **page/view function name**:
 
 ```html
 {{ url_for('about_page_function') }}
@@ -487,7 +487,7 @@ if __name__ == '__main__':
 
 ## Template Forms, Catching Field Values and Error Pages
 
-In this section, a website with several pages is created; they direct to a sign-up form from Bootstrap. After signing up, a thank you page with the signed name is shown. However, that information is not saved anywhere.
+In this section, a website with several pages is created; they direct to a sign-up form defined in HTML, and formatted with the Bootstrap CSS stylesheet. After signing up, a thank you page with the signed name is shown. However, that information is not saved anywhere.
 
 New learned things:
 
@@ -510,7 +510,7 @@ def index():
 # This page will have the sign up form.
 # The user inserts values into form fields.
 # These values are accessible via request.args.get(),
-# as shown in the next page function.
+# as shown in the next page/view function.
 # However, note that in this example we do not persist the values.
 @app.route('/signup_form')
 def signup_form():
@@ -610,9 +610,298 @@ if __name__ == '__main__':
 
 ```
 
-
 # 3. Forms
 
+The previous section introduced a very basic interaction with a form using `request`. However, the form was defined on the HTML side only, not on the Flask side. If we define forms in Flask and reference them in the HTML, we can do much more powerful things.
+
+This section shows to do that.
+
+Concretely, the following technical tools are used:
+
+- Forms are defined in HTML with `<form>`.
+- [WTForms](https://wtforms.readthedocs.io/en/3.0.x/) are used: *"WTForms is a flexible forms validation and rendering library for Python web development. It can work with whatever web framework and template engine you choose. It supports data validation, CSRF protection, internationalization (I18N), and more. There are various community libraries that provide closer integration with popular frameworks."*
+- Flask forms are used in combination with WTForms: [Flask-WTF](https://flask-wtf.readthedocs.io/en/1.0.x/): *"Simple integration of Flask and WTForms, including CSRF, file upload, and reCAPTCHA."*.
+
+The examples are in the folder `examples/03_forms/`.
+
+## First Basic Example
+
+A Flask-WTF form is defined in python and connected to the HTML file so that we can validate and read the fields as well as set their value.
+
+Very basic but interesting example.
+
+Notes:
+
+- The form class definition and the app are in the same python script. In larger applications, usually we separate both: the form class(es) are defined outside and the imported.
+- The HTML `<form>` doesn't need a `class` or an `action`, because we use directly WTForms.
+- If we want some styling, we can append `(class='some CSS class')` to an element in the HTML file: `form.food_choice(class='some CSS class')`.
+
+`examples/03_forms/basic_form.py`:
+
+```python
+# Run: python basic_form.py
+
+from flask import Flask, render_template
+from flask_wtf import FlaskForm
+from wtforms import StringField, SubmitField
+
+app = Flask(__name__)
+
+# Configure a secret SECRET_KEY in the app config dictionary.
+# Here, we do it explicitly in the code for learning
+# but we NEVER should do that.
+# An alternative is to define it as an environment variable
+# and to catch it: os.environ['VARIABLE']
+app.config['SECRET_KEY'] = 'mysecretkey'
+
+# Now create a WTForm Class
+# Lots of fields available:
+# https://wtforms.readthedocs.io/en/3.0.x/fields/
+class InfoForm(FlaskForm):
+    '''This general class gets a lot of form about puppies.
+    Mainly a way to go through many of the WTForms Fields.
+    '''
+    breed = StringField('What breed are you?')
+    submit = SubmitField('Submit')
+
+# We need to pass the methods GET and POST
+# to interact with the HTML form from python
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    # Set the breed to a boolean False
+    # so we can use it in an if statement in the HTML.
+    breed = False
+    # Create instance of the form.
+    form = InfoForm()
+    # If the form is valid on submission (see validation next)
+    if form.validate_on_submit():
+        # Grab the data from the breed on the form: GET
+        # Note the notation: form.<field>.data
+        breed = form.breed.data
+        # Reset the form's breed data to be False: POST
+        form.breed.data = ''
+    # We need to pass all the objects we interact with
+    return render_template('basic-home.html', form=form, breed=breed)
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+```
+
+`examples/03_forms/templates/basic-home.html`:
+
+```html
+<p>
+{% if breed %}
+  The breed you entered is {{breed}}.
+  You can update it in the form below:
+{% else %}
+  Please enter your breed in the form below:
+{% endif %}
+</p>
+
+<form method="POST">
+    {# This hidden_tag is a CSRF security feature (CSRF = Cross-site request forgery). #}
+    {# The HTML <form> doesn't need a class or an action, because we use directly WTForms. #}
+    {# If we want some styling, we append (class='some CSS class') to an element. #}
+    {{ form.hidden_tag() }}
+    {{ form.breed.label }} {{ form.breed(class='some-css-class') }}
+    {{ form.submit() }}
+</form>
+
+```
+
+## Forms Fields
+
+Basically any HTML form field has its Flask-WTForm equivalent object. This section shows an example in which a form with several field types needs to be filled. After hitting the submit button, the content is validated and retrieved to python; then, it is displayed in a "thank you" page.
+
+This example extends the previous as follows:
+
+- Several field types are used.
+- The dictionary `session` is used to save data in a session for the whole application. This object is special because we don't need to pass it: it's visible everywhere.
+- Validation is done.
+- Redirection is used.
+
+`examples/03_forms/form_fields.py`:
+
+```python
+# Run: python form_fields.py
+
+# The session dictionary makes possible to store information
+# visible to the whole application while the user is interacting in a session 
+from flask import Flask, render_template, session, redirect, url_for, session
+from flask_wtf import FlaskForm
+# We can import many fields, there's one for each HTML form component
+from wtforms import (StringField, BooleanField, DateTimeField,
+                     RadioField, SelectField, TextField,
+                     TextAreaField, SubmitField)
+# We can import field validators too!
+from wtforms.validators import DataRequired
+
+app = Flask(__name__)
+# Configure a secret SECRET_KEY in the app config dictionary.
+# Here, we do it explicitly in the code for learning
+# but we NEVER should do that.
+# An alternative is to define it as an environment variable
+# and to catch it: os.environ['VARIABLE']
+app.config['SECRET_KEY'] = 'mysecretkey'
+
+# Now create a WTForm Class
+# Lots of fields available:
+# https://wtforms.readthedocs.io/en/3.0.x/fields/
+class InfoForm(FlaskForm):
+    '''This general class gets a lot of form about puppies.
+    Mainly a way to go through many of the WTForms Fields.
+    '''
+    # We can pass the validators of a field we'd like
+    breed = StringField('What breed are you?',validators=[DataRequired()])
+    neutered  = BooleanField("Have you been neutered?")
+    # Every time we define dictionaries or tuples in the field definition
+    # the user sees the value (Happy), but we get the key (mood_one).
+    mood = RadioField('Please choose your mood:',
+                      choices=[('mood_one','Happy'),('mood_two','Excited')])
+    # In some OS we need unicode strings for field selection, thus we use u
+    food_choice = SelectField(u'Pick Your Favorite Food:',
+                              choices=[('chi', 'Chicken'),
+                                       ('bf', 'Beef'),
+                                       ('fish', 'Fish')])
+    feedback = TextAreaField()
+    submit = SubmitField('Submit')
+
+# We define the methods GET and POST
+# so that we can read/write from fields
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    # Create instance of the form.
+    form = InfoForm()
+    # If the form is valid on submission (we'll talk about validation next)
+    if form.validate_on_submit():
+        # Grab the data from the breed on the form.
+        # We use the session dictionary, which lives on the server
+        # and is accessible for the complete application
+        # while the user is interacting with the form/page in a session,
+        # then it's reset.
+        # We can extend the session dictionary with our desired fields.
+        # Recall the notation: form.<field>.data
+        session['breed'] = form.breed.data
+        session['neutered'] = form.neutered.data
+        session['mood'] = form.mood.data
+        session['food'] = form.food_choice.data
+        session['feedback'] = form.feedback.data
+
+        # When form correctly filled in, show thank you page
+        return redirect(url_for('thankyou'))
+
+    # Original return to show unfilled form
+    return render_template('fields-home.html', form=form)
+
+@app.route('/thankyou')
+def thankyou():
+    return render_template('fields-thankyou.html')
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+```
+
+`examples/03_forms/templates/`:
+
+```html
+<!-- fields-home.html -->
+
+<h1>Welcome to Puppy Surveys</h1>
+<form  method="POST">
+    {# This hidden_tag is a CSRF security feature. #}
+    {# The HTML <form> doesn't need a class or an action, because we use directly WTForms. #}
+    {# If we want some styling, we append (class='some CSS class') to an element: #}
+    {# form.food_choice(class='some CSS class') #}
+
+    {{ form.hidden_tag() }}
+    {{ form.breed.label }} {{ form.breed }}
+    <br>
+    {{ form.neutered.label }} {{ form.neutered }}
+    <br>
+    {{ form.food_choice.label }}{{ form.food_choice }}
+    <br>
+    {{ form.mood.label }}{{ form.mood }}
+    <br>
+    Any other feedback?
+    <br>
+    {{ form.feedback }}
+   <br>
+    {{ form.submit() }}
+</form>
+
+<!-- fields-thankyou.html -->
+
+<h1>Thank you. Here is the info you gave:</h1>
+<ul>
+  {# The session dictionary is always visible, no need to pass it. #}
+  <li>Breed: {{session['breed']}}</li>
+  <li>Neutered: {{session['neutered']}}</li>
+  {# Note, this saves the mood key, not the form value! #}
+  <li>Mood: {{session['mood']}}</li>
+  <li>Food: {{session['food']}}</li>
+  <li>Feedback: {{session['feedback']}}</li>
+</ul>
+
+
+```
+
+## Flash Alerts
+
+Often, when the user fills in a form, instead redirecting to a thank you message, we display a banner.
+That can be done with the `flash` alert object in Flask.
+
+In order to display a nice flash alert object we can use Bootstrap.
+
+`examples/03_forms/flash.py`:
+
+```python
+# Run: python flash.py
+
+from flask import Flask, render_template, flash, session, redirect, url_for
+from flask_wtf import FlaskForm
+from wtforms import StringField,SubmitField
+
+app = Flask(__name__)
+# Configure a secret SECRET_KEY in the app config dictionary.
+# Here, we do it explicitly in the code for learning
+# but we NEVER should do that.
+# An alternative is to define it as an environment variable
+# and to catch it: os.environ['VARIABLE']
+app.config['SECRET_KEY'] = 'mysecretkey'
+
+# Now create a WTForm Class
+# Lots of fields available:
+# https://wtforms.readthedocs.io/en/3.0.x/fields/
+class SimpleForm(FlaskForm):
+    # The form has just one button
+    submit = SubmitField('Click Me.')
+
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    form = SimpleForm()
+
+    if form.validate_on_submit():
+        # This is the flash alert message
+        flash("You just clicked the button!")
+
+        # We redirect here, but the flash alert has been instantiated
+        return redirect(url_for('index'))
+
+    return render_template('flash-home.html', form=form)
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+```
+
+`examples/03_forms/templates/flash-home.html`:
+
+```html
+
+```
 
 # 4. SQL Databases
 

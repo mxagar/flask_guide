@@ -949,11 +949,12 @@ In this section, the following tools are used:
 - SQLite for the database handling; it scales very well. It comes with Flask already installed.
 - SQLAlchemy to interface with the database using python; instead of SQL statements, we can just use python commands with SQLAlchemy. SQLAlchemy is an Object-Relational Mapper (ORM) which links SQL databases with python interfaces.
 
-In order to install SQLAlchemy:
+In order to install SQLAlchemy and database migration capabilities:
 
 ```bash
 conda activate ds
 pip install Flask-SQLAlchemy
+pip install Flask-Migrate
 ```
 
 The examples related to this section are in the folder `examples/04_sql_databases/`. Each section has a sub-folder.
@@ -980,9 +981,9 @@ The database file `data.sqlite` is created when executing the files.
 import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-####################################
-#### SET UP OUR SQLite DATABASE ####
-####################################
+from flask_migrate import Migrate
+
+### -- SET UP OUR SQLite DATABASE
 
 # This grabs our directory, OS independent
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -1001,6 +1002,9 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # which are composed by rows.
 db = SQLAlchemy(app)
 
+# Add on migration capabilities in order to run terminal commands
+Migrate(app,db)
+
 # Let's create our first model!
 # We inherit from db.Model class
 class Puppy(db.Model):
@@ -1012,9 +1016,7 @@ class Puppy(db.Model):
     # Lots of possible types. We'll introduce through out the course
     # Full docs: http://docs.sqlalchemy.org/en/latest/core/types.html
 
-    ######################################
-    ## CREATE THE COLUMNS FOR THE TABLE ##
-    ######################################
+    ### -- CREATE THE COLUMNS FOR THE TABLE
 
     # The columns will be: id (primary key), name, age
 
@@ -1035,7 +1037,6 @@ class Puppy(db.Model):
         # This is the string representation of a puppy in the model
         # I.e., when we want to print a ROW.
         return f"Puppy {self.name} is {self.age} years old."
-
 ```
 
 ### `set_up_database.py`
@@ -1139,6 +1140,82 @@ db.session.commit()
 # Check for changes:
 all_puppies = Puppy.query.all() # list of all puppies in table
 print(all_puppies) # [Puppy Sammy is 10 years old., Puppy Rufus is 5 years old.]
+```
+
+## Flask Migrate
+
+Whenever we redefine or modify tables of a database with SQLAlchemy as python models or classes we need to migrate those changes to the SQLite database. This migration is not automatic, it needs to be done whenever we change the table/model class, for instance, if we add a new field/column.
+
+To do that, we need to have active the migration capabilities of the database in the python script where it is defined:
+
+```python
+from flask_migrate import Migrate
+
+# ...
+db = SQLAlchemy(app)
+
+# Add on migration capabilities in order to run terminal commands
+Migrate(app,db)
+
+# Model/Table
+class MyTable(db.Model):
+    #...
+```
+
+Additionally, we need to set the Flask application file to the environment variable `FLASK_APP` and initialize the migrations repository:
+
+```bash
+# Set FLASK_APP environment variable
+# Unix
+export FLASK_APP=basic_model_app.py
+# Windows
+set FLASK_APP=basic_model_app.py
+
+# Create migration repository; execute only once
+flask db init # migrations folder is created
+
+# To set the migrations for the first time
+# we need to run this migration command.
+# Subsequent changes are also migrated this way
+flask db migrate -m "created Puppies table"
+
+# Now, we execute the migration: we upgrade the table
+flask db upgrade
+```
+
+After that, let's say we change our table from `basic_model_app.py` by adding a column/field `breed`:
+
+```python
+class Puppy(db.Model):
+    '''Puppy table in database. It contains puppies with their attributes.'''
+    __tablename__ = 'puppies'
+
+    id = db.Column(db.Integer,primary_key=True)
+    name = db.Column(db.Text)
+    age = db.Column(db.Integer)
+    # new
+    breed = db.Column(db.Text)
+
+    def __init__(self,name,age,breed='Unknown'):
+        self.name = name
+        self.age = age
+        # new
+        self.breed = breed
+
+    def __repr__(self):
+        return f"Puppy {self.name} is {self.age} years old."
+```
+
+Then, in order to migrate those changes, we need to execute these commands in the directory where the `basic_model_app.py` table definition class is:
+
+```bash
+# Every time we change the table(s) in the app basic_model_app.py
+# we need to run this migration command;
+# it defines the migration in the repository
+flask db migrate -m "added breed column"
+
+# Now, we execute the migration: we upgrade the table
+flask db upgrade
 ```
 
 # 5. Large Applications

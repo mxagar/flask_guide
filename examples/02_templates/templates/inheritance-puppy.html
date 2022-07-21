@@ -1,0 +1,5 @@
+{% extends "inheritance-base.html"%}
+{% block content %}
+<h1>This is the page for the puppy: {{ name | capitalize }}.</h1>
+<a href="{{ url_for('static',filename='puppy_pic.jpg') }}">Click here for a picture of {{ name | capitalize }}.</a> 
+{% endblock %}

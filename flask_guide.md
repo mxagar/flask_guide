@@ -900,11 +900,246 @@ if __name__ == '__main__':
 `examples/03_forms/templates/flash-home.html`:
 
 ```html
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title></title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+</head>
+<body>
+  
+  {# Source for this bootstrapcode:
+  https://getbootstrap.com/docs/4.0/components/alerts/#dismissing #}
+  <div class="container">
+
+    {# get_flashed_messages() is auto sent to the template with the flash() call #}
+    {# we use a loop in case we sent/called flash() several times #}
+        {% for mess in get_flashed_messages()  %}
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close" class="fade close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+          {{mess}}
+          </div>
+        {% endfor %}
+
+    <form method="POST">
+        {# This hidden_tag is a CSRF security feature. #}
+        {{ form.hidden_tag() }}
+        {{ form.submit() }}
+    </form>
+
+  </div>
+</body>
+</html>
 
 ```
 
 # 4. SQL Databases
 
+If want to persist the information that is generate in the application or access some data required by the application, we need a database. Usually Relational Databases are used, i.e., we can interface them SQL.
+
+In this section, the following tools are used:
+
+- SQLite for the database handling; it scales very well. It comes with Flask already installed.
+- SQLAlchemy to interface with the database using python; instead of SQL statements, we can just use python commands with SQLAlchemy. SQLAlchemy is an Object-Relational Mapper (ORM) which links SQL databases with python interfaces.
+
+In order to install SQLAlchemy:
+
+```bash
+conda activate ds
+pip install Flask-SQLAlchemy
+```
+
+The examples related to this section are in the folder `examples/04_sql_databases/`. Each section has a sub-folder.
+
+## Setting Up a Database and Basic CRUD Operations with It
+
+In this section, we are going to do the following:
+
+- Set up an SQLite database in a Flask app. This is done with few lines of cone inside the Flask app; we basically instantiate a SQLite database with SQLAlchemy.
+- Create a model in a Flask app. A model links to a table in a SQL database. Thanks to the SQLAlchemy abstractions, we simply instantiate a model class without any SQL; the model is a table in the SQL database.
+- Perform a basic **CRUD** on our model: Create (a row), Read (a row), Update (a row), Delete (a row). Usually CRUD operations are handled automatically with Flask, but we're going to carry them out manually to see how they work.
+
+Everything is accomplished in python scripts, without the need of any HTML code. See `examples/04_sql_databases/01_model_CRUD_basics/`:
+
+- `basic_model_app.py`: the database `db` is defined within a Flask app and a table is defined for it: `Puppy`.
+- `set_up_database.py`: the database is set up, i.e., the tables are created and the file is written to disk; additionally, an example row is added.
+- `basic_crud.py`: create, read, update and delete operations are carried out as examples.
+
+The database file `data.sqlite` is created when executing the files.
+
+### `basic_model_app.py`
+
+```python
+import os
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+####################################
+#### SET UP OUR SQLite DATABASE ####
+####################################
+
+# This grabs our directory, OS independent
+basedir = os.path.abspath(os.path.dirname(__file__))
+
+app = Flask(__name__)
+
+# Connect our Flask App to our Database.
+# We specify the file in which the database is saved.
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'data.sqlite')
+# We can track all the modifications done to the database
+# but we deactivate it.
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# db is the database, which knows the Flask app
+# using db we create models/tables to it,
+# which are composed by rows.
+db = SQLAlchemy(app)
+
+# Let's create our first model!
+# We inherit from db.Model class
+class Puppy(db.Model):
+
+    # If you don't provide this, the default table name will be the class name
+    __tablename__ = 'puppies'
+
+    # Now create the columns
+    # Lots of possible types. We'll introduce through out the course
+    # Full docs: http://docs.sqlalchemy.org/en/latest/core/types.html
+
+    ######################################
+    ## CREATE THE COLUMNS FOR THE TABLE ##
+    ######################################
+
+    # The columns will be: id (primary key), name, age
+
+    # Primary Key column, unique id for each puppy
+    id = db.Column(db.Integer,primary_key=True)
+    # Puppy name
+    name = db.Column(db.Text)
+    # Puppy age in years
+    age = db.Column(db.Integer)
+
+    # This sets what an instance in this table will have, i.e., a ROW.
+    # Note the id will be auto-created for us later, so we don't add it here!
+    def __init__(self,name,age):
+        self.name = name
+        self.age = age
+
+    def __repr__(self):
+        # This is the string representation of a puppy in the model
+        # I.e., when we want to print a ROW.
+        return f"Puppy {self.name} is {self.age} years old."
+
+```
+
+### `set_up_database.py`
+
+```python
+# This is a very simple script that will show you how to setup our DB
+# Later on we'll want to use this type of code with templates
+
+### NOTE!! If you run this script multiple times you will add
+### multiple puppies to the database. That is okay, just the
+### ids will be higher than 1, 2 on the subsequent runs
+
+# Import database info
+from basic_model_app import db, Puppy
+
+# Create the tables in the database
+# db was instantiated in basic_model_app
+# The SQLite database file appears in its path 
+# (Usually won't do it this way!)
+db.create_all()
+
+# Create new entries in the database
+sam = Puppy('Sammy',3)
+frank = Puppy('Frankie',4)
+
+# Check ids
+# We haven't added sam and frank to database, so they should be None.
+# Note that id is the primary key, set when creating a columns
+print(sam.id)
+print(frank.id)
+
+# Ids will get created automatically once we add these entries to the DB
+# Note we use session: db.session
+db.session.add_all([sam,frank])
+
+# Alternative for individual additions:
+# db.session.add(sam)
+# db.session.add(frank)
+
+# Now save it to the database
+db.session.commit()
+
+# Check the ids
+# Now we get the ids
+print(sam.id)
+print(frank.id)
+
+```
+
+### `basic_crud.py`
+
+```python
+# Now that the table has been created by running: set_up_database.py
+# basic_model_app and set_up_database we can play around with CRUD commands
+# This is just an overview, usually we won't run a single script like this
+# Our goal here is to just familiarize ourselves with CRUD commands
+
+from basic_model_app import db, Puppy
+
+### -- CREATE
+
+my_puppy = Puppy('Rufus',5)
+db.session.add(my_puppy)
+db.session.commit()
+
+### -- READ
+
+# Note lots of ORM filter options here.
+# Basically, SQL statements are translated into python calls:
+# filter(), filter_by(), limit(), order_by(), group_by()
+# Also lots of executor options:
+# all(), first(), get(), count(), paginate()
+
+all_puppies = Puppy.query.all() # list of all puppies in table
+print(all_puppies) # [Puppy Sammy is 3 years old., Puppy Frankie is 4 years old., Puppy Rufus is 5 years old.]
+print('\n')
+# Grab by id
+puppy_one = Puppy.query.get(1)
+print(puppy_one) # Puppy Sammy is 3 years old.
+print(puppy_one.age) # 3
+print('\n')
+# Filters, e.g., by column values (column name)
+puppy_sam = Puppy.query.filter_by(name='Sammy') # Returns list
+print(puppy_sam) # Sammy is 3 years old.
+print('\n')
+
+### -- UPDATE 
+
+# Grab your data, then modify it, then save the changes.
+first_puppy = Puppy.query.get(1)
+first_puppy.age = 10
+db.session.add(first_puppy)
+db.session.commit()
+
+### -- DELETE
+
+second_pup = Puppy.query.get(2)
+db.session.delete(second_pup) # error if second_pup doesn't exist
+db.session.commit()
+
+# Check for changes:
+all_puppies = Puppy.query.all() # list of all puppies in table
+print(all_puppies) # [Puppy Sammy is 10 years old., Puppy Rufus is 5 years old.]
+```
 
 # 5. Large Applications
 

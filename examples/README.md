@@ -26,9 +26,14 @@ For a detailed guide on how to use Flask and the content of the examples: `../fl
 
 ## Example Files
 
-Each section in the guide has its own sub-folder with examples.
+Each section in the guide has its own sub-folder with examples. Additionally, each python script can use HTML templates located in the sub-folder `templates/` or assets/images located in `static/`.
 
 - `01_basics/`
-	- [`hello_world`](./01_basics/hello_world.py)
+	- [`hello_world.py`](./01_basics/hello_world.py)
 	- [`dynamic_routes.py`](./01_basics/dynamic_routes.py)
-- `02_templates`
+- `02_templates/`
+	- [`basic_template.py`](./02_templates/basic_template.py)
+	- [`variables.py`](./02_templates/variables.py)	
+	- [`control_flow.py`](./02_templates/control_flow.py)
+	- [`inheritance.py`](./02_templates/inheritance.py)
+	- [`form.py`](./02_templates/form.py)

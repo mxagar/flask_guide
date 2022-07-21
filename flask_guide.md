@@ -17,6 +17,15 @@ No guarantees.
     - Dynamic Routes
     - Debug Mode
 2. [Templates](#Templates)
+    - Basic Template
+    - Template Variables with Jinja
+    - Template Control Flow with Jinja
+    - Template Inheritance and Filters
+        - Inheritance
+        - Filters
+        - `url_for()`
+        - Example
+    - Template Forms, Catching Field Values and Error Pages
 3. [Forms](#Forms)
 4. SQL Databases
 5. Large Applications

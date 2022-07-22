@@ -1395,7 +1395,7 @@ print(rufus.report_toys())
 
 ## Databases in Views/Page Functions
 
-So far we've seen examples of databases handled outside from the page functions or views. This section puts everything together to create a web application with a database beneath.
+So far we've seen examples of databases handled outside from the page functions or views. This section puts everything together to create a web application with a database beneath: a repository of Puppies who might have owners, i.e., a puppy adoption site.
 
 This section creates a puppy adoption site from the scratch: `examples/04_sql_databases/03_web_with_database/`.
 
@@ -1422,7 +1422,7 @@ This example is very important, because we create a web application with databas
 - list all entries
 - remove entries with forms
 
-... in other words: it's the very basic backbone for any/many websites.
+... in other words: it's the very basic backbone for any/many websites.** **However, note that applications are usually structured with modularized code; that is explained in the next Section 5.**
 
 `adoption_site.py`:
 
@@ -1688,6 +1688,53 @@ HTML pages in `templates/`:
 ```
 
 # 5. Large Applications
+
+Even the small applications as the last example in the previous Section should be organized in a modular manner. This section explains how to accomplish that.
+
+Taking as example that web application for puppy adoption with 2 modules/tables (`Puppy`, `Owner`), we:
+
+- Modularize the code in scripts
+    - `modules.py`
+    - `forms.py`
+    - `views.py`
+- Modularize everything in table/module-related folders: `owners/`, `puppies/`
+- Move HTML templates to `templates/`
+
+![Structuring large Flask applications](./pics/structuring_large_apps.png)
+
+This is reflected in the following structure:
+
+```
+├───app.py # main app.py file to be called to start server for web app
+├───requirements.txt # File of pip install statements for your app
+├───migrations # folder created for migrations by calling
+├───myproject # main project folder, sub-components will be in separate folders
+│   │   data.sqlite
+│   │   models.py
+│   │   __init__.py
+│   ├───owners
+│   │   │   forms.py
+│   │   │   views.py
+│   │   │
+│   │   ├───templates
+│   │       └───owners
+│   │               add_owner.html
+│   ├───puppies
+│   │   │   forms.py
+│   │   │   views.py
+│   │   │
+│   │   ├───templates
+│   │   │   └───puppies
+│   │   │           add.html
+│   │   │           delete.html
+│   │   │           list.html
+│   ├───static # Where you store your CSS, JS, Images, Fonts, etc...
+│   ├───templates
+│          base.html
+│          home.html
+```
+
+## 
 
 
 

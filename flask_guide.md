@@ -1218,6 +1218,174 @@ flask db migrate -m "added breed column"
 flask db upgrade
 ```
 
+## Flask Relationships
+
+We want to have several models/tables which are related; to that end, we create several of them and define primary and foreign key, as in SQL:
+
+- A primary key in a table is a unique identifier.
+- A foreign key in a table represents a primary key from another tables, such that both rows in different tables are linked or connected.
+
+Additionally, we need to tell our app how the models/tables are connected, thus we define `db.relationships`: these are the necessary objects in the app to link models and facilitate join operations later on. Moreover, if we add `backrefs` to the relationships, given an object, we can access its linked object's columns.
+
+All this is exemplified in `examples/04_sql_databases/02_relationships`.
+
+File `models.py`:
+
+```python
+import os
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+
+### -- Set up SQL database
+
+# This grabs our directory
+basedir = os.path.abspath(os.path.dirname(__file__))
+
+app = Flask(__name__)
+
+# Connects our Flask App to our Database
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'data.sqlite')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db = SQLAlchemy(app)
+Migrate(app,db)
+
+class Puppy(db.Model):
+
+    __tablename__ = 'puppies'
+
+    id = db.Column(db.Integer,primary_key = True)
+    name = db.Column(db.Text)
+    # This is a one-to-many relationship
+    # The parameter uselist=True is default, so by default we have one-to-many.    
+    # A puppy can have many toys.
+    # 'Toy': class name of the table we're connecting to
+    # backref: back-reference added in the Toy model; we set the current class name in lower
+    # lazy: it specifies how the related items are to be loaded, dynamic is the general purpose approach
+    toys = db.relationship('Toy',backref='puppy',lazy='dynamic')
+    # This is a one-to-one relationship
+    # A puppy only has one owner, thus uselist is False (default is True).
+    # Strong assumption of 1 dog per 1 owner and vice versa.
+    # The parameter uselist=False makes 1-to-1
+    # We can still use lazy='dynamic'
+    owner = db.relationship('Owner',backref='puppy',uselist=False)
+
+    def __init__(self,name):
+        # Note how a puppy only needs to be initalized with a name!
+        self.name = name
+
+    def __repr__(self):
+        if self.owner:
+            return f"Puppy name is {self.name} and owner is {self.owner.name}"
+        else:
+            return f"Puppy name is {self.name} and has no owner assigned yet."
+
+    def report_toys(self):
+        print("Here are my toys!")
+        for toy in self.toys:
+            print(toy.item_name)
+        
+
+class Toy(db.Model):
+
+    __tablename__ = 'toys'
+
+    id = db.Column(db.Integer,primary_key = True)
+    item_name = db.Column(db.Text)
+    # Connect the toy to the puppy that owns it.
+    # We use puppies.id because __tablename__='puppies'
+    puppy_id = db.Column(db.Integer,db.ForeignKey('puppies.id'))
+
+    def __init__(self,item_name,puppy_id):
+        self.item_name = item_name
+        self.puppy_id = puppy_id
+
+
+class Owner(db.Model):
+
+    __tablename__ = 'owners'
+
+    id = db.Column(db.Integer,primary_key= True)
+    name = db.Column(db.Text)
+    # We use puppies.id because __tablename__='puppies'
+    puppy_id = db.Column(db.Integer,db.ForeignKey('puppies.id'))
+
+    def __init__(self,name,puppy_id):
+        self.name = name
+        self.puppy_id = puppy_id
+
+```
+
+After creating `models.py`, we migrate our database for the first time:
+
+```bash
+cd examples/04_sql_databases/02_relationships
+export FLASK_APP=models.py
+flask db init
+flask db migrate -m "initial migration"
+flask db upgrade
+```
+
+Then, we can add and access entries to the database: `populate_database.py`:
+
+```python
+# Run: python populate_database.py
+
+# This script will create some puppies, owners, and toys!
+# Note, if you run this more than once, you'll be creating dogs with the same
+# name and duplicate owners. The script will still work, but you'll see some
+# warnings. Watch the video for the full explanation.
+from models import db, Puppy, Owner, Toy
+
+# Create 2 puppies
+rufus = Puppy("Rufus")
+fido = Puppy("Fido")
+
+# Add puppies to database
+db.session.add_all([rufus,fido])
+db.session.commit()
+
+# Check with a query, this prints out all the puppies!
+print(Puppy.query.all())
+
+# Grab Rufus from database
+# Grab all puppies with the name "Rufus", returns a list, so index [0]
+# Alternative is to use .first() instead of .all()[0]
+rufus = Puppy.query.filter_by(name='Rufus').all()[0]
+
+# Create an owner to Rufus: one-to-one
+jose = Owner("Jose",rufus.id)
+
+# Give some Toys to Rufus: one-to-many
+toy1 = Toy('Chew Toy',rufus.id)
+toy2 = Toy("Ball",rufus.id)
+
+# Commit these changes to the database
+# We can pass several object types because all inherit from db.Model
+db.session.add_all([jose,toy1,toy2])
+db.session.commit()
+
+# Let's now grab rufus again after these additions
+rufus = Puppy.query.filter_by(name='Rufus').first()
+print(rufus)
+
+# Show toys
+print(rufus.report_toys())
+
+# You can also delete things from the database:
+# find_pup = Puppy.query.get(1)
+# db.session.delete(find_pup)
+# db.session.commit()
+
+```
+
+## Databases in Views/Page Functions
+
+So far we've seen examples of databases handled outside from the page functions or views. This section puts everything together to create a web application with a database beneath.
+
+
+
 # 5. Large Applications
 
 

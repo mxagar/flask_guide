@@ -3,7 +3,6 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
-
 app = Flask(__name__)
 
 # Often people will also separate these into a separate config.py file 
@@ -17,7 +16,12 @@ Migrate(app,db)
 
 # NOTE! These imports need to come after you've defined db, otherwise you will
 # get errors in your models.py files.
-## Grab the blueprints from the other views.py files for each "app"
+# Grab the blueprints from the other views.py files for each "app"
+# Thanks to these imports, 
+# localhost:5000/puppies/add
+# localhost:5000/puppies/list
+# localhost:5000/puppies/delete
+# localhost:5000/owners/add
 from myproject.puppies.views import puppies_blueprint
 from myproject.owners.views import owners_blueprint
 

@@ -1,8 +1,8 @@
+# Run: python app.py
+
 # This is app.py, this is the main file called.
 from myproject import app
 from flask import render_template
-
-
 
 @app.route('/')
 def index():

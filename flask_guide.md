@@ -6,17 +6,19 @@ I created this repository following online tutorials and the Udemy course by Jos
 
 Note that Python knowledge and some web development skills are required. For the latter, have a look at [jekyll_web_guide](https://github.com/mxagar/jekyll_web_guide) `/ html_css_bootstrap_guide.md`.
 
+The sections build up on each other; if you're looking for a web app blueprint with a database, look at the examples explained in the final sub-section of Section 4 and the Section 5.
+
 Mikel Sagardia, 2022.  
 No guarantees.
 
 ### Table of Contents
 
-1. [Flask Basics](#Flask-Basics)
+1. [Flask Basics](#1.-Flask-Basics)
     - Hello World Example
     - Basic Routes
     - Dynamic Routes
     - Debug Mode
-2. [Templates](#Templates)
+2. [Templates](#2.-Templates)
     - Basic Template
     - Template Variables with Jinja
     - Template Control Flow with Jinja
@@ -26,12 +28,23 @@ No guarantees.
         - `url_for()`
         - Example
     - Template Forms, Catching Field Values and Error Pages
-3. [Forms](#Forms)
-4. SQL Databases
-5. Large Applications
-6. User Authentication
-7. REST APIs
-8. Deployment
+3. [Forms](#3.-Forms)
+    - First Basic Example
+    - Forms Fields
+    - Flash Alerts
+4. [SQL Databases](4.-SQL-Databases)
+    - Setting Up a Database and Basic CRUD Operations with It
+        - `basic_model_app.py`
+        - `set_up_database.py`
+        - `basic_crud.py`
+    - Flask Migrate
+        - Note: Resetting
+    - Flask Relationships
+    - Databases in Views/Page Functions
+5. [Large Application Structuring](#5.-Large-Application-Structuring)
+6. [User Authentication](#6.-User-Authentication)
+7. [REST APIs](#7.-REST-APIs)
+8. [Deployment](#8.-Deployment)
 
 There is an `examples/` folder with the examples described in the current guide.
 
@@ -45,6 +58,8 @@ conda activate ds
 # Install if not done yet
 conda install -c anaconda flask  -y
 conda install -c anaconda flask-wtf  -y
+pip install Flask-SQLAlchemy
+pip install Flask-Migrate
 ```
 
 ## Hello World Example
@@ -1218,7 +1233,7 @@ flask db migrate -m "added breed column"
 flask db upgrade
 ```
 
-### Note: Restarting
+### Note: Resetting
 
 If we want to reset our project, we can always delete the SQLite database file `data.sqlite` and the `migrations/` folder and run
 
@@ -1734,9 +1749,37 @@ This is reflected in the following structure:
 │          home.html
 ```
 
-## 
+In addition to re-structuring the project as shown, we also can make use of **blueprints**, which allow to create view URLs which are organized according to table/module names:
 
+```
+http://127.0.0.1:5000/puppies/add
+http://127.0.0.1:5000/puppies/list
+http://127.0.0.1:5000/puppies/delete
+http://127.0.0.1:5000/owners/add
+```
 
+The folder `examples/05_large_app_structuring` contains the example.
+
+I will not copy the code here; most of the code comes from the example in Section 4. New things are:
+
+- `__init__.py`
+- blueprints
+- folder structuring and refactoring
+
+... all self-explanatory.
+
+To run the example:
+
+```bash
+cd examples/05_large_app_structuring
+export FLASK_APP=app.py
+flask db init
+flask db migrate -m "created puppies and owners"
+python app.py
+
+```
+
+**IMPORTANT NOTE: I doesn't seem to work, there is some bug in the table naming, since they are not found**. I won't spend much time with that.
 
 # 6. User Authentication
 

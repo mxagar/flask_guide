@@ -1,8 +1,9 @@
 from myproject import db
+# In order to import db, we need to define it in __init__.py
 
 class Puppy(db.Model):
-
     __tablename__ = 'puppies'
+
     id = db.Column(db.Integer,primary_key = True)
     name = db.Column(db.Text)
     owner = db.relationship('Owner',backref='puppy',uselist=False)
@@ -17,7 +18,6 @@ class Puppy(db.Model):
             return f"Puppy name is {self.name} and has no owner assigned yet."
 
 class Owner(db.Model):
-
     __tablename__ = 'owners'
 
     id = db.Column(db.Integer,primary_key= True)

@@ -1218,6 +1218,19 @@ flask db migrate -m "added breed column"
 flask db upgrade
 ```
 
+### Note: Restarting
+
+If we want to reset our project, we can always delete the SQLite database file `data.sqlite` and the `migrations/` folder and run
+
+```bash
+export FLASK_APP=models.py # or the file where the DB and the models/tables are defined
+flask db init # migrations folder is created
+flask db migrate -m "first migration"
+flask db upgrade
+```
+
+However, note if we delete the `data.sqlite` file we loose all our information.
+
 ## Flask Relationships
 
 We want to have several models/tables which are related; to that end, we create several of them and define primary and foreign key, as in SQL:
@@ -1384,9 +1397,298 @@ print(rufus.report_toys())
 
 So far we've seen examples of databases handled outside from the page functions or views. This section puts everything together to create a web application with a database beneath.
 
+This section creates a puppy adoption site from the scratch: `examples/04_sql_databases/03_web_with_database/`.
 
+Recall that after the python script where the database and the models/tables are defined is finished, we always need to perform the first migration:
+
+```bash
+cd examples/04_sql_databases/03_web_with_database
+export FLASK_APP=adoption_site.py
+flask db init
+flask db migrate -m "initial migration"
+flask db upgrade
+```
+
+When all python scripts and HTML templates are finished, to run the application:
+
+```bash
+cd examples/04_sql_databases/03_web_with_database
+python adoption_site.py
+```
+
+This example is very important, because we create a web application with database that can be modified by the user; we have pages to:
+
+- add entries with forms
+- list all entries
+- remove entries with forms
+
+... in other words: it's the very basic backbone for any/many websites.
+
+`adoption_site.py`:
+
+```python
+# Run: python adoption_site.py
+
+import os
+from flask import Flask, render_template, url_for, redirect
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+# We define the forms in a separate script
+from forms import  AddForm, DelForm, AddOwnerForm
+
+app = Flask(__name__)
+# Key for Forms
+app.config['SECRET_KEY'] = 'mysecretkey'
+
+##########################################
+
+        # SQL DATABASE AND MODELS
+
+##########################################
+
+basedir = os.path.abspath(os.path.dirname(__file__))
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'data.sqlite')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db = SQLAlchemy(app)
+Migrate(app,db)
+
+class Puppy(db.Model):
+
+    __tablename__ = 'puppies'
+    id = db.Column(db.Integer,primary_key = True)
+    name = db.Column(db.Text)
+    owner = db.relationship('Owner',backref='puppy',uselist=False)
+
+    def __init__(self,name):
+        self.name = name
+
+    def __repr__(self):
+        if self.owner:
+            return f"Puppy name is {self.name} and owner is {self.owner.name}"
+        else:
+            return f"Puppy name is {self.name} and has no owner assigned yet."
+
+class Owner(db.Model):
+
+    __tablename__ = 'owners'
+
+    id = db.Column(db.Integer,primary_key= True)
+    name = db.Column(db.Text)
+    # We use puppies.id because __tablename__='puppies'
+    puppy_id = db.Column(db.Integer,db.ForeignKey('puppies.id'))
+
+    def __init__(self,name,puppy_id):
+        self.name = name
+        self.puppy_id = puppy_id
+
+    def __repr__(self):
+        return f"Owner Name: {self.name}"
+
+##########################################
+
+        # VIEWS WITH FORMS
+
+##########################################
+
+@app.route('/')
+def index():
+    return render_template('home.html')
+
+@app.route('/add', methods=['GET', 'POST'])
+def add_pup():
+    form = AddForm()
+
+    if form.validate_on_submit():
+        name = form.name.data
+
+        # Add new Puppy to database
+        new_pup = Puppy(name)
+        db.session.add(new_pup)
+        db.session.commit()
+
+        return redirect(url_for('list_pup'))
+
+    return render_template('add.html',form=form)
+
+@app.route('/add_owner', methods=['GET', 'POST'])
+def add_owner():
+
+    form = AddOwnerForm()
+
+    if form.validate_on_submit():
+        name = form.name.data
+        pup_id = form.pup_id.data
+        # Add new owner to database
+        new_owner = Owner(name,pup_id)
+        db.session.add(new_owner)
+        db.session.commit()
+
+        return redirect(url_for('list_pup'))
+
+    return render_template('add_owner.html',form=form)
+
+@app.route('/list')
+def list_pup():
+    # Grab a list of puppies from database.
+    puppies = Puppy.query.all()
+    return render_template('list.html', puppies=puppies)
+
+@app.route('/delete', methods=['GET', 'POST'])
+def del_pup():
+    form = DelForm()
+
+    if form.validate_on_submit():
+        id = form.id.data
+        pup = Puppy.query.get(id)
+        db.session.delete(pup)
+        db.session.commit()
+
+        return redirect(url_for('list_pup'))
+
+    return render_template('delete.html',form=form)
+
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+```
+
+`forms.py`:
+
+```python
+from flask_wtf import FlaskForm
+from wtforms import StringField, IntegerField, SubmitField
+
+class AddForm(FlaskForm):
+    name = StringField('Name of Puppy:')
+    submit = SubmitField('Add Puppy')
+
+class AddOwnerForm(FlaskForm):
+    name = StringField('Name of Owner:')
+    pup_id = IntegerField("Id of Puppy: ")
+    submit = SubmitField('Add Owner')
+
+class DelForm(FlaskForm):
+    id = IntegerField('Id Number of Puppy to Remove:')
+    submit = SubmitField('Remove Puppy')
+
+```
+
+HTML pages in `templates/`:
+
+```html
+<!-- base.html -->
+
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+    <title>Adoption</title>
+  </head>
+  <body>
+
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+
+      <div class="navbar-nav">
+        <a class="nav-item nav-link" href="{{ url_for('index') }}">Home</a>
+        <a class="nav-item nav-link" href="{{ url_for('add_pup') }}">Add Pup</a>
+        <a class="nav-item nav-link" href="{{ url_for('list_pup') }}">List of Pups</a>
+        <a class="nav-item nav-link" href="{{ url_for('del_pup') }}">Delete Pup</a>
+        <a class="nav-item nav-link" href="{{ url_for('add_owner') }}">Add Owner</a>
+      </div>
+
+    </nav>
+
+    {% block content %}
+
+    {% endblock %}
+  </body>
+</html>
+
+<!-- home.html -->
+
+{% extends "base.html" %}
+{% block content %}
+<div class="jumbotron">
+  <h1>Welcome to our Adoption Page</h1>
+  <p>Please select one of the links from the nav bar.</p>
+</div>
+{% endblock %}
+
+<!-- add.html -->
+
+{% extends "base.html" %}
+{% block content %}
+<div class="jumbotron">
+  <h1>Have a puppy that needs to be adopted?</h1>
+  <p>Add a new puppy with the form below:</p>
+  <form method="POST">
+      {# This hidden_tag is a CSRF security feature. #}
+      {{ form.hidden_tag() }}
+      {{ form.name.label }} {{ form.name() }}
+      {{ form.submit() }}
+  </form>
+</div>
+{% endblock %}
+
+<!-- list.html -->
+
+{% extends "base.html" %}
+{% block content %}
+<div class="jumbotron">
+  <h1>Here is a list of all available puppies.</h1>
+  <ul>
+    {% for pup in puppies  %}
+    <li>{{pup}}</li>
+    {% endfor %}
+  </ul>
+
+</div>
+{% endblock %}
+
+<!-- delete.html -->
+
+{% extends "base.html" %}
+{% block content %}
+<div class="jumbotron">
+  <h1>Did a puppy get adopted?</h1>
+  <p>Fill out the form to remove the puppy from the list.</p>
+  <form method="POST">
+      {# This hidden_tag is a CSRF security feature. #}
+      {{ form.hidden_tag() }}
+      {{ form.id.label }} {{ form.id() }}
+      {{ form.submit() }}
+  </form>
+</div>
+{% endblock %}
+
+<!-- add_owner.html -->
+
+{% extends "base.html" %}
+{% block content %}
+<div class="jumbotron">
+  <h1>Add an owner</h1>
+  <p>Add a new owner with the form below:</p>
+  <form method="POST">
+      {# This hidden_tag is a CSRF security feature. #}
+      {{ form.hidden_tag() }}
+      {{ form.name.label }} {{ form.name() }}<br>
+      {{ form.pup_id.label }} {{ form.pup_id() }}<br>
+      {{ form.submit() }}
+  </form>
+</div>
+{% endblock %}
+
+```
 
 # 5. Large Applications
+
 
 
 # 6. User Authentication

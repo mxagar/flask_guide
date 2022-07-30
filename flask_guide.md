@@ -1783,10 +1783,15 @@ python app.py
 
 # 6. User Authentication
 
+TBD.
 
 # 7. REST APIs
 
+TBD.
 
 # 8. Deployment
 
+TBD.
+
+See [data_science_udacity](https://github.com/mxagar/data_science_udacity) `/ DSND_SWENgineering.md`.
 

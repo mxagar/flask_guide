@@ -13,38 +13,40 @@ No guarantees.
 
 ### Table of Contents
 
-1. [Flask Basics](#1.-Flask-Basics)
-    - Hello World Example
-    - Basic Routes
-    - Dynamic Routes
-    - Debug Mode
-2. [Templates](#2.-Templates)
-    - Basic Template
-    - Template Variables with Jinja
-    - Template Control Flow with Jinja
-    - Template Inheritance and Filters
-        - Inheritance
-        - Filters
-        - `url_for()`
-        - Example
-    - Template Forms, Catching Field Values and Error Pages
-3. [Forms](#3.-Forms)
-    - First Basic Example
-    - Forms Fields
-    - Flash Alerts
-4. [SQL Databases](4.-SQL-Databases)
-    - Setting Up a Database and Basic CRUD Operations with It
-        - `basic_model_app.py`
-        - `set_up_database.py`
-        - `basic_crud.py`
-    - Flask Migrate
-        - Note: Resetting
-    - Flask Relationships
-    - Databases in Views/Page Functions
-5. [Large Application Structuring](#5.-Large-Application-Structuring)
-6. [User Authentication](#6.-User-Authentication)
-7. [REST APIs](#7.-REST-APIs)
-8. [Deployment](#8.-Deployment)
+- [Flask Guide](#flask-guide)
+    - [Table of Contents](#table-of-contents)
+- [1. Flask Basics](#1-flask-basics)
+  - [Hello World Example](#hello-world-example)
+  - [Basic Routes](#basic-routes)
+  - [Dynamic Routes](#dynamic-routes)
+  - [Debug Mode](#debug-mode)
+- [2. Templates](#2-templates)
+  - [Basic Template](#basic-template)
+  - [Template Variables with Jinja](#template-variables-with-jinja)
+  - [Template Control Flow with Jinja](#template-control-flow-with-jinja)
+  - [Template Inheritance and Filters](#template-inheritance-and-filters)
+    - [Inheritance](#inheritance)
+    - [Filters](#filters)
+    - [`url_for()`](#url_for)
+    - [Example](#example)
+  - [Template Forms, Catching Field Values and Error Pages](#template-forms-catching-field-values-and-error-pages)
+- [3. Forms](#3-forms)
+  - [First Basic Example](#first-basic-example)
+  - [Forms Fields](#forms-fields)
+  - [Flash Alerts](#flash-alerts)
+- [4. SQL Databases](#4-sql-databases)
+  - [Setting Up a Database and Basic CRUD Operations with It](#setting-up-a-database-and-basic-crud-operations-with-it)
+    - [`basic_model_app.py`](#basic_model_apppy)
+    - [`set_up_database.py`](#set_up_databasepy)
+    - [`basic_crud.py`](#basic_crudpy)
+  - [Flask Migrate](#flask-migrate)
+    - [Note: Resetting](#note-resetting)
+  - [Flask Relationships](#flask-relationships)
+  - [Databases in Views/Page Functions](#databases-in-viewspage-functions)
+- [5. Large Applications](#5-large-applications)
+- [6. User Authentication](#6-user-authentication)
+- [7. REST APIs](#7-rest-apis)
+- [8. Deployment](#8-deployment)
 
 There is an `examples/` folder with the examples described in the current guide.
 
@@ -1783,9 +1785,13 @@ python app.py
 
 # 6. User Authentication
 
+:construction:
+
 TBD.
 
 # 7. REST APIs
+
+:construction:
 
 TBD.
 

@@ -9,10 +9,10 @@ I created this repository following online tutorials; particularly interesting o
 
 Contents:
 
-- `flask_guide.md`: guide to learn/use Flask
-- `examples/`: folder with examples referenced from `flask_guide.md`.
+- [`flask_guide.md`](flask_guide.md): guide to learn/use Flask.
+- [`examples/`](examples): folder with examples referenced from `flask_guide.md`.
 
-Note that Python knowledge and some web development skills are required. For the latter, have a look at [jekyll_web_guide](https://github.com/mxagar/jekyll_web_guide) `/ html_css_bootstrap_guide.md`. That repository also contains notes on how to create static websites (including blogs) with Jekyll.
+Note that Python knowledge and some web development skills are required. For the latter, have a look at [`jekyll_web_guide/html_css_bootstrap_guide.md`](https://github.com/mxagar/jekyll_web_guide/blob/main/html_css_bootstrap_js_guide.md). That repository also contains notes on how to create static websites (including blogs) with Jekyll.
 
 Mikel Sagardia, 2022.  
 No guarantees.

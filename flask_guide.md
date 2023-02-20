@@ -6,6 +6,11 @@ I created this repository following online tutorials and the Udemy course by Jos
 
 Note that Python knowledge and some web development skills are required. For the latter, have a look at [jekyll_web_guide](https://github.com/mxagar/jekyll_web_guide) `/ html_css_bootstrap_guide.md`.
 
+Additionally, check these notes:
+
+- []()
+- []()
+
 The sections build up on each other; if you're looking for a web app blueprint with a database, look at the examples explained in the final sub-section of Section 4 and the Section 5.
 
 Mikel Sagardia, 2022.  
@@ -56,6 +61,7 @@ Installation:
 
 ```bash
 # Select environment
+conda create --name ds
 conda activate ds
 # Install if not done yet
 conda install -c anaconda flask  -y
@@ -1791,13 +1797,10 @@ TBD.
 
 # 7. REST APIs
 
-:construction:
+See [`mlops_udacity/MLOpsND_Monitoring.md`](https://github.com/mxagar/mlops_udacity/blob/main/04_Monitoring/MLOpsND_Monitoring.md).
 
-TBD.
+However, [FastAPI](https://fastapi.tiangolo.com/) seems better suited for that. Check my guide/notes on it here: [`mlops_udacity/MLOpsND_Deployment.md`](https://github.com/mxagar/mlops_udacity/blob/main/03_Deployment/MLOpsND_Deployment.md#5-api-deployment-with-fastapi)
 
 # 8. Deployment
 
-TBD.
-
-See [data_science_udacity](https://github.com/mxagar/data_science_udacity) `/ DSND_SWENgineering.md`.
-
+See [`data_science_udacity/DSND_SWENgineering.md`](https://github.com/mxagar/data_science_udacity/blob/main/02_SoftwareEngineering/DSND_SWEngineering.md).

@@ -16,46 +16,48 @@ The sections build up on each other; if you're looking for a web app blueprint w
 Mikel Sagardia, 2022.  
 No guarantees.
 
-### Table of Contents
+## Table of Contents
 
 - [Flask Guide](#flask-guide)
-    - [Table of Contents](#table-of-contents)
-- [1. Flask Basics](#1-flask-basics)
-  - [Hello World Example](#hello-world-example)
-  - [Basic Routes](#basic-routes)
-  - [Dynamic Routes](#dynamic-routes)
-  - [Debug Mode](#debug-mode)
-- [2. Templates](#2-templates)
-  - [Basic Template](#basic-template)
-  - [Template Variables with Jinja](#template-variables-with-jinja)
-  - [Template Control Flow with Jinja](#template-control-flow-with-jinja)
-  - [Template Inheritance and Filters](#template-inheritance-and-filters)
-    - [Inheritance](#inheritance)
-    - [Filters](#filters)
-    - [`url_for()`](#url_for)
-    - [Example](#example)
-  - [Template Forms, Catching Field Values and Error Pages](#template-forms-catching-field-values-and-error-pages)
-- [3. Forms](#3-forms)
-  - [First Basic Example](#first-basic-example)
-  - [Forms Fields](#forms-fields)
-  - [Flash Alerts](#flash-alerts)
-- [4. SQL Databases](#4-sql-databases)
-  - [Setting Up a Database and Basic CRUD Operations with It](#setting-up-a-database-and-basic-crud-operations-with-it)
+  - [Table of Contents](#table-of-contents)
+  - [1. Flask Basics](#1-flask-basics)
+    - [Hello World Example](#hello-world-example)
+    - [Basic Routes](#basic-routes)
+    - [Dynamic Routes](#dynamic-routes)
+    - [Other Ways of Passing Arguments Via Endpoint URL: Requests](#other-ways-of-passing-arguments-via-endpoint-url-requests)
+    - [Debug Mode](#debug-mode)
+    - [Host and Port](#host-and-port)
+  - [2. Templates](#2-templates)
+    - [Basic Template](#basic-template)
+    - [Template Variables with Jinja](#template-variables-with-jinja)
+    - [Template Control Flow with Jinja](#template-control-flow-with-jinja)
+    - [Template Inheritance and Filters](#template-inheritance-and-filters)
+      - [Inheritance](#inheritance)
+      - [Filters](#filters)
+      - [`url_for()`](#url_for)
+      - [Example](#example)
+    - [Template Forms, Catching Field Values and Error Pages](#template-forms-catching-field-values-and-error-pages)
+  - [3. Forms](#3-forms)
+    - [First Basic Example](#first-basic-example)
+    - [Forms Fields](#forms-fields)
+    - [Flash Alerts](#flash-alerts)
+  - [4. SQL Databases](#4-sql-databases)
+    - [Setting Up a Database and Basic CRUD Operations with It](#setting-up-a-database-and-basic-crud-operations-with-it)
     - [`basic_model_app.py`](#basic_model_apppy)
-    - [`set_up_database.py`](#set_up_databasepy)
-    - [`basic_crud.py`](#basic_crudpy)
-  - [Flask Migrate](#flask-migrate)
-    - [Note: Resetting](#note-resetting)
-  - [Flask Relationships](#flask-relationships)
-  - [Databases in Views/Page Functions](#databases-in-viewspage-functions)
-- [5. Large Applications](#5-large-applications)
-- [6. User Authentication](#6-user-authentication)
-- [7. REST APIs](#7-rest-apis)
-- [8. Deployment](#8-deployment)
+      - [`set_up_database.py`](#set_up_databasepy)
+      - [`basic_crud.py`](#basic_crudpy)
+    - [Flask Migrate](#flask-migrate)
+      - [Note: Resetting](#note-resetting)
+      - [Flask Relationships](#flask-relationships)
+    - [Databases in Views/Page Functions](#databases-in-viewspage-functions)
+  - [5. Large Applications](#5-large-applications)
+  - [6. User Authentication](#6-user-authentication)
+  - [7. REST APIs](#7-rest-apis)
+  - [8. Deployment](#8-deployment)
 
 There is an `examples/` folder with the examples described in the current guide.
 
-# 1. Flask Basics
+## 1. Flask Basics
 
 Installation:
 
@@ -74,8 +76,9 @@ Interesting links:
 
 - [Flask vs. Django](https://steelkiwi.medium.com/flask-vs-django-how-to-understand-whether-you-need-a-hammer-or-a-toolbox-39b8b3a2e4a5)
 - [Flask Tutorials](https://www.fullstackpython.com/flask.html)
+- [Create REST APIs in Python using Flask](https://www.sqlshack.com/create-rest-apis-in-python-using-flask/)
 
-## Hello World Example
+### Hello World Example
 
 `./examples/01_basics/hello_world.py`:
 
@@ -92,6 +95,7 @@ def index():
     return '<h1>Hello World!</h1>'
 
 if __name__ == '__main__':
+    # app.run(host="0.0.0.0", port=8000)
     app.run()
 
 ```
@@ -105,7 +109,16 @@ python hello_world.py
 # To finish web server: Ctrl+C
 ```
 
-## Basic Routes
+**Important**: In this guide, the browser is used to check the Flask apps and a focus is lied on HTML web code as return; however:
+
+- We can simply return values, e.g., numbers, strings, etc.
+- We can also use `curl` in another terminal, instead of the browser.
+
+```bash
+curl "http://127.0.0.1:5000/"
+```
+
+### Basic Routes
 
 With `@app.route()` we define the name of the page we are creating:
 
@@ -127,7 +140,7 @@ def info():
 # we get a 404 error: Not found
 ```
 
-## Dynamic Routes
+### Dynamic Routes
 
 With dynamic routes we pass variables to the page or view functions. The effect is that we can type the matching URL address we want, i.e., we pass the variable name through the browser. Then, that variable is caught by the page or view function and it can process it as desired.
 
@@ -175,7 +188,78 @@ python dynamic_route.py
 # To finish web server: Ctrl+C
 ```
 
-## Debug Mode
+### Other Ways of Passing Arguments Via Endpoint URL: Requests
+
+With dynamic routes we can dynamically re-define endpoints; with `request`, we can catch user inputs.
+
+Example: `./examples/01_basics/app.py`
+
+```python
+"""A simple Flask API/App.
+
+Usually, a Flask app has these minimum steps:
+
+1. Instantiate the Flask app
+2. Define the endpoints so that users can interact
+3. Run the app with chosen host and port values
+
+To execute the app:
+
+    $ python app_dataset.py
+
+and the app is served. We get the IP where it's served,
+but usually, we can always access it via 127.0.0.1
+or localhost from our local machine.
+
+To use an endpoint, we run in another terminal:
+
+    $ curl "http://127.0.0.1:8000?user=Mikel"
+
+and we get back True in return.
+
+Or:
+
+    $ curl "http://127.0.0.1:8000/medians?filename=demodata.csv"
+
+and we get back
+
+    year            1990.0
+    population    935933.0
+
+Note: demodata.csv should be in the same folder for the previous usage example
+"""
+
+from flask import Flask, request
+import pandas as pd
+
+app = Flask(__name__)
+
+# We can define so many auxiliary functions as we want
+# here or in separate modules, too.
+def read_pandas(filename):
+    data = pd.read_csv(filename)
+    return data
+
+# curl "http://127.0.0.1:8000?user=Mikel"
+@app.route('/')
+def index():
+    user = request.args.get('user')
+    return str(user=='Mikel') + '\n'
+
+# curl "http://127.0.0.1:8000/medians?filename=demodata.csv"
+# (if demodata.csv is in the same folder)
+@app.route('/medians')
+def summary():
+    filename = request.args.get('filename')  
+    data = read_pandas(filename)
+    return str(data.median(axis=0))
+
+if __name__ == "__main__":
+    app.run(host='0.0.0.0', port=8000)
+
+```
+
+### Debug Mode
 
 We can activate debug mode in the application as follows:
 
@@ -190,14 +274,28 @@ We can also open an interactive python debugging console clicking on the traceba
 
 NOTE: debug mode should be deactivated when we deploy to production!
 
+### Host and Port
 
-# 2. Templates
+In this guide, the app is run in the code/script with `app.run()`. However, we can configure it more:
+
+- We can specify the host IP; if not done, the `localhost` or `127.0.0.1` is taken. Another typical way is using `host="0.0.0.0"`; that means the IP assigned to the server is taken. In practice, we're going to be able to use `localhost` or `127.0.0.1` if we access the app locally, but, additionally, via the IP of the machine in the network. That's essential  when we're deploying the app.
+- We can specify the port. If not, the default port is 5000; however, another typical value is 8000.
+
+```python
+app.run(host="0.0.0.0", port=8000)
+# appp accessible at
+# 127.0.0.1:8000
+# localhost:8000
+# device-ip:8000
+```
+
+## 2. Templates
 
 Instead of returning HTML strings, we usually render a template HTML file. These are **templates** and they are rendered with the function `render_template(html_filepath)`.
 
 Templates need to be located in a folder called `templates/` and they can use resources from other locations, e.g., image files.
 
-## Basic Template
+### Basic Template
 
 All the HTML template files need to be in `templates/`. The resources they use can be anywhere, e.g., in this case, they are in the folder `static/`.
 
@@ -247,7 +345,7 @@ if __name__ == '__main__':
 
 ```
 
-## Template Variables with Jinja
+### Template Variables with Jinja
 
 We can use [Jinja templating](https://jinja.palletsprojects.com/en/3.1.x/), as in Jekyll, to inject variables from the python script in the HTML document visualized with `render_template()`; simply, the variables are created inside the page/view function and passed directly to `render_template()`. Then, we access them with Jinja notation in the HTML document. We can pass strings, lists, dictionaries, etc.
 
@@ -315,7 +413,7 @@ if __name__ == '__main__':
 </html>
 ```
 
-## Template Control Flow with Jinja
+### Template Control Flow with Jinja
 
 While with Jinja variables we use `{{ variable }}` within the HTML text, we need to use `{% ... %}` for control flow statements, i.e., `if, for`, etc. Inside them, we can access the variables.
 
@@ -383,9 +481,9 @@ if __name__ == '__main__':
 </html>
 ```
 
-## Template Inheritance and Filters
+### Template Inheritance and Filters
 
-### Inheritance
+#### Inheritance
 
 The idea is to define a base HTML template file which is inherited by other HTML files. That way, we don't need to repeat ourselves with common elements like styles, menu bars, etc.
 
@@ -398,7 +496,7 @@ Note that the name of the block `content` is arbitrary, but must match between t
 
 ![Template Inheritance](./pics/template_inheritance.png)
 
-### Filters
+#### Filters
 
 Filtering consists in applying functions to variables; often these function names are similar to the ones in python:
 
@@ -414,7 +512,7 @@ Important links on filter:
 - [Template Designer Documentation](https://jinja.palletsprojects.com/en/3.1.x/templates/)
 - [List of built-in filters](https://jinja.palletsprojects.com/en/3.1.x/templates/#builtin-filters)
 
-### `url_for()`
+#### `url_for()`
 
 Instead of using hard-coded HTML filepaths we can use `url_for()` in a Jinja command: we enter the page or view function name and the associated HTML file path is returned.
 
@@ -441,7 +539,7 @@ We can also access any asset or file, not only HTML files. In that case, we spec
 {{ url_for('static', filename='pic.jpg') }}
 ```
 
-### Example
+#### Example
 
 This example is in `examples/02_templates/`.
 
@@ -513,7 +611,7 @@ if __name__ == '__main__':
 
 ```
 
-## Template Forms, Catching Field Values and Error Pages
+### Template Forms, Catching Field Values and Error Pages
 
 In this section, a website with several pages is created; they direct to a sign-up form defined in HTML, and formatted with the Bootstrap CSS stylesheet. After signing up, a thank you page with the signed name is shown. However, that information is not saved anywhere.
 
@@ -638,7 +736,7 @@ if __name__ == '__main__':
 
 ```
 
-# 3. Forms
+## 3. Forms
 
 The previous section introduced a very basic interaction with a form using `request`. However, the form was defined on the HTML side only, not on the Flask side. If we define forms in Flask and reference them in the HTML, we can do much more powerful things.
 
@@ -652,7 +750,7 @@ Concretely, the following technical tools are used:
 
 The examples are in the folder `examples/03_forms/`.
 
-## First Basic Example
+### First Basic Example
 
 A Flask-WTF form is defined in python and connected to the HTML file so that we can validate and read the fields as well as set their value.
 
@@ -739,7 +837,7 @@ if __name__ == '__main__':
 
 ```
 
-## Forms Fields
+### Forms Fields
 
 Basically any HTML form field has its Flask-WTForm equivalent object. This section shows an example in which a form with several field types needs to be filled. After hitting the submit button, the content is validated and retrieved to python; then, it is displayed in a "thank you" page.
 
@@ -876,7 +974,7 @@ if __name__ == '__main__':
 
 ```
 
-## Flash Alerts
+### Flash Alerts
 
 Often, when the user fills in a form, instead redirecting to a thank you message, we display a banner.
 That can be done with the `flash` alert object in Flask.
@@ -968,7 +1066,7 @@ if __name__ == '__main__':
 
 ```
 
-# 4. SQL Databases
+## 4. SQL Databases
 
 If want to persist the information that is generate in the application or access some data required by the application, we need a database. Usually Relational Databases are used, i.e., we can interface them SQL.
 
@@ -987,7 +1085,7 @@ pip install Flask-Migrate
 
 The examples related to this section are in the folder `examples/04_sql_databases/`. Each section has a sub-folder.
 
-## Setting Up a Database and Basic CRUD Operations with It
+### Setting Up a Database and Basic CRUD Operations with It
 
 In this section, we are going to do the following:
 
@@ -1067,7 +1165,7 @@ class Puppy(db.Model):
         return f"Puppy {self.name} is {self.age} years old."
 ```
 
-### `set_up_database.py`
+#### `set_up_database.py`
 
 ```python
 # This is a very simple script that will show you how to setup our DB
@@ -1114,7 +1212,7 @@ print(frank.id)
 
 ```
 
-### `basic_crud.py`
+#### `basic_crud.py`
 
 ```python
 # Now that the table has been created by running: set_up_database.py
@@ -1170,7 +1268,7 @@ all_puppies = Puppy.query.all() # list of all puppies in table
 print(all_puppies) # [Puppy Sammy is 10 years old., Puppy Rufus is 5 years old.]
 ```
 
-## Flask Migrate
+### Flask Migrate
 
 Whenever we redefine or modify tables of a database with SQLAlchemy as python models or classes we need to migrate those changes to the SQLite database. This migration is not automatic, it needs to be done whenever we change the table/model class, for instance, if we add a new field/column.
 
@@ -1246,7 +1344,7 @@ flask db migrate -m "added breed column"
 flask db upgrade
 ```
 
-### Note: Resetting
+#### Note: Resetting
 
 If we want to reset our project, we can always delete the SQLite database file `data.sqlite` and the `migrations/` folder and run
 
@@ -1259,7 +1357,7 @@ flask db upgrade
 
 However, note if we delete the `data.sqlite` file we loose all our information.
 
-## Flask Relationships
+#### Flask Relationships
 
 We want to have several models/tables which are related; to that end, we create several of them and define primary and foreign key, as in SQL:
 
@@ -1421,7 +1519,7 @@ print(rufus.report_toys())
 
 ```
 
-## Databases in Views/Page Functions
+### Databases in Views/Page Functions
 
 So far we've seen examples of databases handled outside from the page functions or views. This section puts everything together to create a web application with a database beneath: a repository of Puppies who might have owners, i.e., a puppy adoption site.
 
@@ -1715,7 +1813,7 @@ HTML pages in `templates/`:
 
 ```
 
-# 5. Large Applications
+## 5. Large Applications
 
 Even the small applications as the last example in the previous Section should be organized in a modular manner. This section explains how to accomplish that.
 
@@ -1794,18 +1892,18 @@ python app.py
 
 **IMPORTANT NOTE: I doesn't seem to work, there is some bug in the table naming, since they are not found**. I won't spend much time with that.
 
-# 6. User Authentication
+## 6. User Authentication
 
 :construction:
 
 TBD.
 
-# 7. REST APIs
+## 7. REST APIs
 
 See [`mlops_udacity/MLOpsND_Monitoring.md`](https://github.com/mxagar/mlops_udacity/blob/main/04_Monitoring/MLOpsND_Monitoring.md).
 
 However, [FastAPI](https://fastapi.tiangolo.com/) seems better suited for that. Check my guide/notes on it here: [`mlops_udacity/MLOpsND_Deployment.md`](https://github.com/mxagar/mlops_udacity/blob/main/03_Deployment/MLOpsND_Deployment.md#5-api-deployment-with-fastapi)
 
-# 8. Deployment
+## 8. Deployment
 
 See [`data_science_udacity/DSND_SWENgineering.md`](https://github.com/mxagar/data_science_udacity/blob/main/02_SoftwareEngineering/DSND_SWEngineering.md).

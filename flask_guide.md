@@ -8,8 +8,8 @@ Note that Python knowledge and some web development skills are required. For the
 
 Additionally, check these notes:
 
-- []()
-- []()
+- [`mlops_udacity/MLOpsND_Monitoring.md`](https://github.com/mxagar/mlops_udacity/blob/main/04_Monitoring/MLOpsND_Monitoring.md)
+- [`data_science_udacity/DSND_SWENgineering.md`](https://github.com/mxagar/data_science_udacity/blob/main/02_SoftwareEngineering/DSND_SWEngineering.md)
 
 The sections build up on each other; if you're looking for a web app blueprint with a database, look at the examples explained in the final sub-section of Section 4 and the Section 5.
 
@@ -69,6 +69,11 @@ conda install -c anaconda flask-wtf  -y
 pip install Flask-SQLAlchemy
 pip install Flask-Migrate
 ```
+
+Interesting links:
+
+- [Flask vs. Django](https://steelkiwi.medium.com/flask-vs-django-how-to-understand-whether-you-need-a-hammer-or-a-toolbox-39b8b3a2e4a5)
+- [Flask Tutorials](https://www.fullstackpython.com/flask.html)
 
 ## Hello World Example
 
